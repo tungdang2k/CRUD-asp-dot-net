@@ -1,0 +1,30 @@
+﻿@model CRUD.Models.SinhVien
+
+<h2>Thêm sinh viên</h2>
+
+<form asp-action="Create" method="post">
+
+    <div class="mb-3">
+        <label>Họ tên</label>
+        <input asp-for="HoTen" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Tuổi</label>
+        <input asp-for="Tuoi" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Lớp</label>
+        <input asp-for="Lop" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-success">
+        Lưu
+    </button>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        Quay lại
+    </a>
+
+</form>

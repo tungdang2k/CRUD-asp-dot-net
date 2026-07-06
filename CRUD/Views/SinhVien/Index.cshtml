@@ -1,0 +1,46 @@
+﻿@model List<CRUD.Models.SinhVien>
+
+@{
+    ViewData["Title"] = "Danh sách sinh viên";
+}
+
+<h2>Danh sách sinh viên</h2>
+<a asp-action="Create" class="btn btn-primary mb-3">
+    ADD
+</a>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Họ tên</th>
+            <th>Tuổi</th>
+            <th>Lớp</th>
+            <th>Thao tác</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var sv in Model)
+        {
+            <tr>
+                <td>@sv.Id</td>
+                <td>@sv.HoTen</td>
+                <td>@sv.Tuoi</td>
+                <td>@sv.Lop</td>
+                <td>
+                    <a asp-action="Edit"
+                       asp-route-id="@sv.Id"
+                       class="btn btn-warning btn-sm">
+                        Sửa
+                    </a>
+
+                    <a asp-action="Delete"
+                       asp-route-id="@sv.Id"
+                       class="btn btn-danger btn-sm">
+                        Xóa
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

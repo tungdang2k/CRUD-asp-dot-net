@@ -1,0 +1,27 @@
+﻿@model CRUD.Models.SinhVien
+
+<h2>Xóa sinh viên</h2>
+
+<h4>Bạn có chắc muốn xóa?</h4>
+
+<hr />
+
+<p><b>Họ tên:</b> @Model.HoTen</p>
+
+<p><b>Tuổi:</b> @Model.Tuoi</p>
+
+<p><b>Lớp:</b> @Model.Lop</p>
+
+<form asp-action="Delete">
+
+    <input asp-for="Id" type="hidden" />
+
+    <button class="btn btn-danger">
+        Xóa
+    </button>
+
+    <a asp-action="Index" class="btn btn-secondary">
+        Hủy
+    </a>
+
+</form>
