@@ -2,7 +2,7 @@
 
 <h2>Thêm sinh viên</h2>
 
-<form asp-action="Create" method="post">
+<form asp-action="Create" method="post" enctype="multipart/form-data">
 
     <div class="mb-3">
         <label>Họ tên</label>
@@ -17,6 +17,10 @@
     <div class="mb-3">
         <label>Lớp</label>
         <input asp-for="Lop" class="form-control" />
+    </div>
+    <div>
+        <label>Ảnh</label>
+        <input asp-for="ImageFile" type="file" />
     </div>
 
     <button type="submit" class="btn btn-success">

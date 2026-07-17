@@ -2,7 +2,7 @@
 
 <h2>Sửa sinh viên</h2>
 
-<form asp-action="Edit" method="post">
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
 
     <input asp-for="Id" type="hidden" />
 
@@ -20,7 +20,10 @@
         <label>Lớp</label>
         <input asp-for="Lop" class="form-control" />
     </div>
-
+    <div>
+        <label>Ảnh</label>
+        <input asp-for="ImageFile" type="file" />
+    </div>
     <button class="btn btn-warning">
         Cập nhật
     </button>
