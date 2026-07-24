@@ -1,7 +1,5 @@
 ﻿using CRUD.Services;
-using DocumentFormat.OpenXml.Drawing.Diagrams;
 using Hangfire;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CRUD.Controllers
@@ -10,14 +8,14 @@ namespace CRUD.Controllers
     [ApiController]
     public class JobControler : ControllerBase
     {
-        [HttpPost]
-        [Route("CreateBackgroundJob")]
-        public ActionResult CreateBackgroundJob()
-        {
-            BackgroundJob.Enqueue<EmailService>( (x) => x.SendWelcomeEmail("tungdev@gmail.com"));
+        private readonly RedisQueueService _queue;
 
-            return Ok("Đã đưa email vào hàng đợi.");
+        public JobControler(RedisQueueService queue)
+        {
+            _queue = queue;
         }
+
+       
 
         [HttpPost]
         [Route("CreateScheduledJob")]
@@ -63,6 +61,17 @@ namespace CRUD.Controllers
             return Ok();
         }
 
+        [HttpGet]
+        [Route("QueueLength")]
+        public async Task<IActionResult> QueueLength()
+        {
+            var count = await _queue.GetQueueLengthAsync();
+
+            return Ok(new
+            {
+                Queue = count
+            });
+        }
 
     }
 }

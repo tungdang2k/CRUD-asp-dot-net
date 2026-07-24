@@ -1,8 +1,9 @@
-﻿using CRUD.Data;
+﻿using ClosedXML.Excel;
+using CRUD.Data;
 using CRUD.Models;
+using CRUD.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ClosedXML.Excel;
 namespace CRUD.Controllers
 {
     public class SinhVienController : Controller
@@ -10,14 +11,17 @@ namespace CRUD.Controllers
         private readonly ApplicationDbContext _context;
 
         private readonly IWebHostEnvironment _environment;
+        private readonly RedisQueueService _queue;
+
         public SinhVienController(
-        ApplicationDbContext context,
-        IWebHostEnvironment environment)
+    ApplicationDbContext context,
+    IWebHostEnvironment environment,
+    RedisQueueService queue)
         {
             _context = context;
             _environment = environment;
+            _queue = queue;
         }
-
 
         public async Task<IActionResult> Index(int page = 1)
         {
@@ -175,42 +179,82 @@ namespace CRUD.Controllers
 
 
         // import excel
+        //[HttpPost]
+        //public async Task<IActionResult> ImportExcel(IFormFile file)
+        //{
+        //    if (file == null || file.Length == 0)
+        //    {
+        //        TempData["Message"] = "Vui lòng chọn file Excel.";
+        //        return RedirectToAction("Index");
+        //    }
+
+        //    using var stream = new MemoryStream();
+        //    await file.CopyToAsync(stream);
+
+        //    using var workbook = new XLWorkbook(stream);
+        //    var worksheet = workbook.Worksheet(1);
+
+        //    var rows = worksheet.RowsUsed().Skip(1);
+
+        //    foreach (var row in rows)
+        //    {
+        //        var sv = new SinhVien
+        //        {
+        //            HoTen = row.Cell(1).GetString(),
+        //            Tuoi = row.Cell(2).GetValue<int>(),
+        //            Lop = row.Cell(3).GetString()
+        //        };
+
+        //        _context.SinhVien.Add(sv);
+        //    }
+
+        //    _context.SaveChanges();
+
+        //    TempData["Message"] = "Import thành công!";
+        //    return RedirectToAction("Index");
+        //}
+
         [HttpPost]
         public async Task<IActionResult> ImportExcel(IFormFile file)
         {
             if (file == null || file.Length == 0)
             {
-                TempData["Message"] = "Vui lòng chọn file Excel.";
-                return RedirectToAction("Index");
+                TempData["Message"] = "Vui lòng chọn file.";
+
+                return RedirectToAction(nameof(Index));
             }
 
-            using var stream = new MemoryStream();
-            await file.CopyToAsync(stream);
+            string uploadFolder =
+                Path.Combine(_environment.ContentRootPath, "Uploads");
 
-            using var workbook = new XLWorkbook(stream);
-            var worksheet = workbook.Worksheet(1);
+            if (!Directory.Exists(uploadFolder))
+                Directory.CreateDirectory(uploadFolder);
 
-            var rows = worksheet.RowsUsed().Skip(1);
+            string fileName =
+                Guid.NewGuid() +
+                Path.GetExtension(file.FileName);
 
-            foreach (var row in rows)
+            string fullPath =
+                Path.Combine(uploadFolder, fileName);
+
+            using (var stream = new FileStream(fullPath, FileMode.Create))
             {
-                var sv = new SinhVien
-                {
-                    HoTen = row.Cell(1).GetString(),
-                    Tuoi = row.Cell(2).GetValue<int>(),
-                    Lop = row.Cell(3).GetString()
-                };
-
-                _context.SinhVien.Add(sv);
+                await file.CopyToAsync(stream);
             }
 
-            _context.SaveChanges();
+            var job = new QueueJob
+            {
+                FileName = file.FileName,
+                FilePath = fullPath
+            };
 
-            TempData["Message"] = "Import thành công!";
-            return RedirectToAction("Index");
+            await _queue.AddJobAsync(job);
+
+            TempData["Message"] =
+                "Đã đưa file vào Redis Queue.";
+
+            return RedirectToAction(nameof(Index));
         }
-
-
         // export excel
         public async Task<IActionResult> ExportExcel()
         {

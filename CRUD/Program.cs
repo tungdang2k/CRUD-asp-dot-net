@@ -8,7 +8,15 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddControllersWithViews();
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var configuration = builder.Configuration
+                               .GetConnectionString("Redis");
+
+    return ConnectionMultiplexer.Connect(configuration!);
+});
+
+
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -23,12 +31,12 @@ builder.Services.AddHangfire((sp, config) =>
 builder.Services.AddHangfireServer();
 
 
-var redisConnection = builder.Configuration.GetConnectionString("Redis");
-builder.Services.AddSingleton<IConnectionMultiplexer>(
-    ConnectionMultiplexer.Connect(redisConnection));
-
-builder.Services.AddScoped<EmailService>();
+builder.Services.AddSingleton<EmailService>();
+builder.Services.AddSingleton<RedisQueueService>();
 builder.Services.AddScoped<StudentJobService>();
+builder.Services.AddHostedService<QueueWorkerService>();
+builder.Services.AddSingleton<QueueMonitorService>();
+
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
@@ -55,5 +63,8 @@ app.MapControllerRoute(
     pattern: "{controller=SinhVien}/{action=Index}/{id?}");
 
 app.UseHangfireDashboard("/hangfire");
-
+RecurringJob.AddOrUpdate<QueueMonitorService>(
+    "RedisQueueMonitor",
+    x => x.CheckQueueAsync(),
+    Cron.Minutely);
 app.Run();

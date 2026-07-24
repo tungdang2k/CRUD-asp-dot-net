@@ -2,14 +2,28 @@
 {
     public class EmailService
     {
-        public void SendWelcomeEmail(string email)
+        private readonly ILogger<EmailService> _logger;
+
+        public EmailService(ILogger<EmailService> logger)
         {
-            Console.WriteLine($"[{DateTime.Now}] Đang gửi email tới: {email}");
+            _logger = logger;
+        }
 
-            // Giả lập gửi email mất 5 giây
-            Thread.Sleep(5000);
+        public async Task SendWarningEmailAsync(
+            string subject,
+            string message)
+        {
+            await Task.Delay(1000);
 
-            Console.WriteLine($"[{DateTime.Now}] Đã gửi email thành công tới: {email}");
+            _logger.LogWarning("========== EMAIL ==========");
+            _logger.LogWarning(subject);
+            _logger.LogWarning(message);
+            _logger.LogWarning("===========================");
+
+            Console.WriteLine("========== EMAIL ==========");
+            Console.WriteLine(subject);
+            Console.WriteLine(message);
+            Console.WriteLine("===========================");
         }
     }
 }
