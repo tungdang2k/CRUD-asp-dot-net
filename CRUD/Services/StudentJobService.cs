@@ -1,4 +1,5 @@
-﻿using CRUD.Data;
+﻿using ClosedXML.Excel;
+using CRUD.Data;
 using CRUD.Models;
 
 namespace CRUD.Services
@@ -12,33 +13,46 @@ namespace CRUD.Services
             _context = context;
         }
 
-        public void ImportFakeStudents()
+        public async Task ImportExcelAsync(string filePath)
         {
-            Console.WriteLine("===== BẮT ĐẦU IMPORT =====");
+            Console.WriteLine($"===== BẮT ĐẦU IMPORT {filePath} =====");
 
-            for (int i = 1; i <= 10000; i++)
+            using var workbook = new XLWorkbook(filePath);
+
+            var worksheet = workbook.Worksheet(1);
+
+            var rows = worksheet.RowsUsed().Skip(1);
+
+            int count = 0;
+
+            foreach (var row in rows)
             {
-                _context.SinhVien.Add(new SinhVien
+                var sv = new SinhVien
                 {
-                    HoTen = $"Sinh viên {i}",
-                    Tuoi = 20,
-                    Lop = "CNTT"
-                });
+                    HoTen = row.Cell(1).GetString(),
+                    Tuoi = row.Cell(2).GetValue<int>(),
+                    Lop = row.Cell(3).GetString()
+                };
 
-                // Lưu mỗi 1000 bản ghi
-                if (i % 1000 == 0)
+                _context.SinhVien.Add(sv);
+
+                count++;
+
+                // Cứ 100 bản ghi lưu một lần
+                if (count % 100 == 0)
                 {
-                    _context.SaveChanges();
+                    await _context.SaveChangesAsync();
 
-                    Console.WriteLine($"Đã import {i} sinh viên");
+                    Console.WriteLine($"Đã import {count} sinh viên");
 
-                    Thread.Sleep(2000); // Giả lập xử lý lâu
+                    // Giả lập import chậm
+                    await Task.Delay(1000);
                 }
             }
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            Console.WriteLine("===== IMPORT XONG =====");
+            Console.WriteLine("===== IMPORT THÀNH CÔNG =====");
         }
     }
 }
